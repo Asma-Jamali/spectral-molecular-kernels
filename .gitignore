@@ -1,0 +1,27 @@
+# Files
+check_reps.py
+compare_kernels.py
+compute_spectral.py
+generate_acsf.py
+submit_jobs.py
+submit_mol.py
+submit_spectral.py
+submit_tr_sweep.py
+submit_tr.py
+test_acsf.py
+test_dn_kernel.py
+train_grid.py
+train.py
+
+# Folders
+Dataset/
+Ablation_study/
+Plot/
+Results/
+Results_acsf20000/
+Results_LLM/
+Results_tr/
+ResultsProperties/
+slurm_logs/
+Spectrum/
+Tuning/
