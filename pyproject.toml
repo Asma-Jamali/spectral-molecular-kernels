@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kermol"
+version = "0.1.0"
+description = "Spectral analysis of molecular kernel methods on QM9"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+include = ["Kermol*"]

@@ -15,6 +15,8 @@ train.py
 
 # Folders
 __pycache__/
+examples/output/
+*.egg-info/
 Dataset/
 Ablation_study/
 Plot/

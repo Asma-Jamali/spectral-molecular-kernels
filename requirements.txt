@@ -1,0 +1,16 @@
+numpy==1.26.4
+scipy==1.17.0
+pandas==3.0.0
+scikit-learn==1.7.1
+matplotlib==3.10.8
+tqdm==4.67.1
+rdkit==2025.09.4
+qml2==0.1.7
+dscribe==2.1.2
+ase==3.27.0
+selfies==2.2.0
+torch==2.9.1
+gpytorch==1.15.1
+gauche==0.1.6
+optuna==4.8.0
+transformers>=4.40
