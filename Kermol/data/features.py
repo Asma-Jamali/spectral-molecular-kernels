@@ -55,7 +55,6 @@ def load_precomputed_rep(rep_name: str, rep_dir: str) -> np.ndarray:
     if data.dtype != object:
         return data.astype(np.float64)
 
-    # Object array: try dict format first, then stack rows
     try:
         d = data.item()
         if isinstance(d, dict):

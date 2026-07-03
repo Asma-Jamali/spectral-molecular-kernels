@@ -31,7 +31,7 @@ HARTREE_TO_EV = 27.2114
 
 
 def atomization_energies(raw_ha, charges, prop):
-    """Subtract per-atom B3LYP references and convert Hartree → eV."""
+    """Subtract per-atom B3LYP references and convert Hartree to eV."""
     refs    = ATOMIC_REFS[prop]
     ref_sum = np.array([sum(refs[int(z)] for z in mol_charges if z > 0)
                         for mol_charges in charges])
@@ -39,26 +39,16 @@ def atomization_energies(raw_ha, charges, prop):
 
 
 def charges_from_smiles(smiles: np.ndarray) -> np.ndarray:
-    """
-    Derive per-molecule atomic-number arrays from SMILES strings.
-    Explicit hydrogens are added so the atomic reference sums match QM9.
-    Returns an object array of int32 arrays, same format as npz['Z'].
-    """
     charges = np.empty(len(smiles), dtype=object)
     for i, smi in enumerate(smiles):
         mol = Chem.AddHs(Chem.MolFromSmiles(smi))
         charges[i] = np.array([a.GetAtomicNum() for a in mol.GetAtoms()], dtype=np.int32)
     return charges
 
-
 def prepare_labels_from_csv(csv_path: str, property_name: str,
                             use_atomization: bool = False,
                             charges: np.ndarray | None = None):
-    """
-    Load labels from filtered_QM9.csv.
-    Returns (labels, train_unit, prop_unit) with the same semantics as prepare_labels.
-    use_atomization requires charges (atomic numbers array) from the .npz file.
-    """
+    
     need_smiles = use_atomization and property_name in ENERGY_PROPS and charges is None
     cols = [CSV_COL_MAP.get(property_name, property_name)]
     if need_smiles:
@@ -85,11 +75,6 @@ def prepare_labels_from_csv(csv_path: str, property_name: str,
 
 
 def prepare_labels(data, property_name, charges, use_atomization):
-    """
-    Returns (labels, train_unit, prop_unit).
-    All Hartree-based properties are converted to eV before training.
-    Cv is left in cal/(mol·K). train_unit reflects the unit of labels.
-    """
     prop_unit = PROP_UNITS.get(property_name, '')
 
     if property_name in HARTREE_PROPS:
