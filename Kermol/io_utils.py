@@ -23,8 +23,6 @@ def save_learning_curve(results, train_sizes, tag, property_name, kernel_name,
                .agg(mean_mae='mean', std_mae='std')
                .reset_index())
     summary.to_csv(os.path.join(props_dir, f'learning_curve_{tag}.csv'), index=False)
-    print(f'\nLearning-curve results saved to Properties/learning_curve_{tag}*.csv')
-    print(summary.to_string(index=False))
 
     title_suffix = 'atomization' if (property_name in ENERGY_PROPS and use_atomization) else 'QM9'
     fig, ax = plt.subplots(figsize=(6, 4))
@@ -43,7 +41,6 @@ def save_learning_curve(results, train_sizes, tag, property_name, kernel_name,
     fig.tight_layout()
     fig.savefig(os.path.join(props_dir, f'learning_curve_{tag}.png'), dpi=150)
     plt.close(fig)
-    print(f'Plot saved to Properties/learning_curve_{tag}.png')
 
 
 def save_spectral_results(spectral_rows, eigenvalue_store, tag, spectrum_dir):
@@ -55,8 +52,6 @@ def save_spectral_results(spectral_rows, eigenvalue_store, tag, spectrum_dir):
                     .reset_index())
     spec_summary.columns = ['_'.join(c).strip('_') for c in spec_summary.columns]
     spec_summary.to_csv(os.path.join(spectrum_dir, f'spectral_metrics_{tag}.csv'), index=False)
-    print(f'Spectral metrics saved to Spectrum/spectral_metrics_{tag}*.csv')
 
     eigval_path = os.path.join(spectrum_dir, f'eigenvalues_{tag}.npz')
     np.savez(eigval_path, **{f's{s}_n{n}': v for (s, n), v in eigenvalue_store.items()})
-    print(f'Eigenvalues saved to Spectrum/eigenvalues_{tag}.npz')
