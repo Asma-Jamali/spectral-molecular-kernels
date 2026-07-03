@@ -3,8 +3,21 @@ import numpy as np
 import pandas as pd
 from typing import List, Union
 
+from transformers import AutoTokenizer, AutoModel
+import torch
+
 from rdkit.Chem import AllChem, MolFromSmiles
 from rdkit import DataStructs
+from rdkit.Chem import AllChem, MolFromSmiles
+
+from ase import Atoms
+from dscribe.descriptors import SOAP, ACSF
+
+from qml2 import Compound, CompoundList
+from qml2.representations.standard_geometric import array_ as qml_array
+from qml2.representations import generate_fchl19, generate_coulomb_matrix, get_slatm_mbtypes, generate_slatm, compute_ncm, get_bob_bags
+
+import selfies as sf
 
 from tqdm import tqdm
 
@@ -15,7 +28,8 @@ FINGERPRINT_REPS = {'ecfp6', 'ecfp4'}
 def generate_ecfp(smiles: np.ndarray, radius: int = 3, n_bits: int = 2048) -> np.ndarray:
     """Generate Morgan (ECFP) fingerprints from SMILES strings.
 
-    Defaults to ECFP6 (radius=3, n_bits=2048); pass radius=2, n_bits=1024 for ECFP4.
+    ECFP6 (radius=3, n_bits=2048)
+    ECFP4 (radius=2, n_bits=1024).
     Returns a float64 array of shape (n_mols, n_bits).
     """
     fpgen = AllChem.GetMorganGenerator(radius=radius, fpSize=n_bits)
@@ -34,11 +48,6 @@ def load_smiles_from_csv(csv_path: str) -> np.ndarray:
 def load_precomputed_rep(rep_name: str, rep_dir: str) -> np.ndarray:
     """
     Load a pre-computed global representation from a .npy file.
-
-    Handles three storage formats:
-      - plain float/int array  (grover_base, grover_large, chemberta, selfies_ted, selformer)
-      - object array of fixed-size vectors (legacy format)
-      - dict with rep_name key (legacy format)
     """
     path = os.path.join(rep_dir, f'{rep_name}.npy')
     data = np.load(path, allow_pickle=True)
@@ -56,39 +65,20 @@ def load_precomputed_rep(rep_name: str, rep_dir: str) -> np.ndarray:
 
     return np.vstack(data).astype(np.float64)
 
-from rdkit.Chem import AllChem, MolFromSmiles
-from ase import Atoms
-from dscribe.descriptors import SOAP, ACSF
-from qml2 import Compound, CompoundList
-from qml2.representations.standard_geometric import array_ as qml_array
-from qml2.representations import (
-    generate_fchl19,
-    generate_coulomb_matrix,
-    get_slatm_mbtypes,
-    generate_slatm,
-    # New BOB imports
-    compute_ncm, 
-    get_bob_bags
-)
-
-# from qmllib.representations import generate_fchl19, generate_coulomb_matrix, generate_bob, get_slatm_mbtypes, generate_slatm, generate_acsf
-
-
 
 class FingerprintGenerator:
     def __init__(self, radius: int = 3, n_bits: int = 2048):
         """Generates ECFP (Morgan) fingerprints using RDKit."""
+        
         self.name = 'ecfp'
         self.radius = radius
         self.n_bits = n_bits
 
     def generate(self, smiles: Union[List[str], np.ndarray]) -> np.ndarray:
-        """Generates Morgan (ECFP) fingerprints from SMILES."""
         
-        fpgen = AllChem.GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)
-        
-        rdkit_mols = [MolFromSmiles(s) for s in smiles]
-        fps = [fpgen.GetFingerprint(mol) for mol in rdkit_mols]
+        fpgen = AllChem.GetMorganGenerator(radius=self.radius, fpSize=self.n_bits)        
+        mols = [MolFromSmiles(s) for s in smiles]
+        fps = [fpgen.GetFingerprint(mol) for mol in mols]
         
         return np.array(fps)
 
@@ -102,7 +92,7 @@ class PhysicalGenerator:
         """
         Args:
             representation: 'fchl19', 'soap', 'coulomb_matrix', 'bob', 'slatm', 'acsf'
-            local: If True, returns atomic representations. If False, molecular.
+            local: If True, returns atomic representations. If False, molecular representation (single vector).
             kwargs: representation-specific parameters (e.g. soap_species, interaction cuts).
         """
         self.name = representation
@@ -153,7 +143,7 @@ class PhysicalGenerator:
             r_cut=self.kwargs.get('r_cut', 6.0),
             n_max=self.kwargs.get('n_max', 3),
             l_max=self.kwargs.get('l_max', 3),
-            sigma=self.kwargs.get('sigma', 0.1),  # paper uses 0.1; DScribe default is 1.0
+            sigma=self.kwargs.get('sigma', 0.1), 
         )
         reps = []
         for q, r in zip(charges, coords):
@@ -163,7 +153,7 @@ class PhysicalGenerator:
 
     def _generate_cm(self, coords, charges):
         max_atoms = max(len(q) for q in charges)
-        size = max_atoms        # paper uses size=29 → 29*30/2 = 435 features
+        size = max_atoms      
         reps = []
         for q, r in zip(charges, coords):
             q_arr = np.array(q, dtype=np.int32)    
@@ -186,12 +176,7 @@ class PhysicalGenerator:
         bags = get_bob_bags(compound_list.all_nuclear_charges(), elements=elements)
         ncm = compute_ncm(bags)
 
-        compound_list.generate_bob(
-            bags,
-            ncm=ncm,
-            elements=elements,
-            test_mode=True 
-        )
+        compound_list.generate_bob(bags, ncm=ncm, elements=elements, test_mode=True)
 
 
         rep = np.array(compound_list.all_representations())
@@ -229,10 +214,6 @@ class PhysicalGenerator:
         return repacsf
 
 
-
-# HuggingFace model id, pooling strategy ('cls' = pooler_output, 'mean' = attention-mask-
-# weighted mean of last_hidden_state), and whether only the .encoder submodule is called
-# (selfies-ted is an encoder-decoder model; we only need the encoder's hidden states).
 LLM_MODEL_REGISTRY = {
     'chembert':    {'hf_id': 'jonghyunlee/ChemBERT_ChEMBL_pretrained',                 'pooling': 'cls'},
     'chemberta':   {'hf_id': 'Phando/chemberta-v2-finetuned-uspto-50k-classification', 'pooling': 'cls'},
@@ -245,11 +226,6 @@ LLM_MODEL_REGISTRY = {
 class LLMEmbeddingGenerator:
     """
     Fixed-size molecular embeddings from pretrained SELFIES-based transformer
-    language models (see LLM_MODEL_REGISTRY for the supported model names).
-
-    Each SMILES is converted to SELFIES and the SELFIES tokens are
-    space-separated before tokenization, since these models' tokenizers split
-    on whitespace rather than parsing SELFIES bracket syntax directly.
     """
 
     def __init__(self, model_name: str, batch_size: int = 100, max_length: int = 128,
@@ -257,8 +233,7 @@ class LLMEmbeddingGenerator:
         if model_name not in LLM_MODEL_REGISTRY:
             raise ValueError(f"Unknown LLM representation: {model_name!r}. "
                              f"Choose from {sorted(LLM_MODEL_REGISTRY)}")
-        from transformers import AutoTokenizer, AutoModel
-        import torch
+            
         self._torch = torch
 
         cfg = LLM_MODEL_REGISTRY[model_name]
@@ -275,7 +250,7 @@ class LLMEmbeddingGenerator:
 
     @staticmethod
     def _to_selfies(smiles: str) -> str:
-        import selfies as sf
+        
         return sf.encoder(smiles).replace('][', '] [')
 
     @staticmethod
@@ -301,8 +276,6 @@ class LLMEmbeddingGenerator:
 
             with torch.no_grad():
                 if self.encoder_only:
-                    # selfies-ted is an encoder-decoder model with no pooler_output;
-                    # only the encoder's hidden states are needed, mean-pooled.
                     hidden    = self.model.encoder(
                         input_ids=input_ids, attention_mask=attention_mask
                     ).last_hidden_state
