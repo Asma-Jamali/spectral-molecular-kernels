@@ -37,6 +37,17 @@ Given `K_train`, decomposed as $K = \sum_i \mu_i u_i u_i^\top$ (eigenvalues $\mu
 | `ablation_study.py` | Randomly removes N features from `ecfp` (frequency-weighted) or `selfies_ted` (uniform) and re-fits, sweeping over N | `--rep {ecfp,selfies_ted,both}`, `--data_path`, `--rep_dir` (required for `selfies_ted`), `--n_train`, `--n_test` |
 | `generate_llm_embeddings.py` | Generates a transformer embedding matrix for a dataset and saves it as `.npy` | `--model {chembert,chemberta,selformer,selfies_ted}`, `--data_path`, `--out`, `--device` |
 
+## Data
+
+The examples expect a QM9 `.npz` file with keys `coords`, `Z` (nuclear charges),
+`smiles`, and target property (`gap`, `U0`, `U298`, `H298`, `G298`, `Cv`, `ZPVE`, `AtomizationEnergy`).
+
+To prepare it, you can use:
+
+```bash
+python examples/prepare_qm9.py --out qm9_data.npz
+```
+
 ## Setup
 
 ```bash
