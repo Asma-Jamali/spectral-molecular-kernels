@@ -18,6 +18,7 @@ submit_qm9_new_reps.py
 submit_schnet_qm9.py
 submit_spectral.py
 submit_spectral_centered.py
+submit_ecfp4_gaussian_extraseeds.py
 submit_tdc.py
 submit_tdc_v2.py
 submit_tr_sweep.py
@@ -46,6 +47,7 @@ slurm_logs/
 Spectrum/
 Spectrum_centered/
 Spectrum_centered_warmup/
+Spectrum_centered_warmup_extraseeds/
 Spectrum_length4_warmup/
 Spectrum_maceoff_warmup/
 Spectrum_v2/

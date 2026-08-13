@@ -25,8 +25,6 @@ class SpectralAnalyzer:
         # 1. Decompose and Sort (Largest to Smallest)
         eigval, eigvec = scipy.linalg.eigh(K)
         
-        # np.save("debug_eigval.npy", eigval)
-        
         # Sort descending (eigh returns ascending)
         idx = np.argsort(-eigval)
         self.eigenvalues = eigval[idx]
