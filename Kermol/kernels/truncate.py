@@ -3,7 +3,7 @@ import numpy as np
 from .kernels import krr_predict
 
 
-# ── Log-spaced truncation scheme ──────────────────────────────────────────────
+# Log-spaced truncation scheme
 
 def build_schemes(n_train: int) -> dict[str, list[int]]:
     """35 log-spaced k-values from 1 to n_train — no gaps in the eigenspectrum."""
@@ -13,7 +13,7 @@ def build_schemes(n_train: int) -> dict[str, list[int]]:
     return {"LogSweep": k_all}
 
 
-# ── Functional reconstruction helpers (used by train_truncate.py) ─────────────
+# Functional reconstruction helpers
 
 def reconstruct_train(V: np.ndarray, lam: np.ndarray, k: int) -> np.ndarray:
     """K_train_r = (V_k * lam_k) @ V_k^T — broadcasting avoids forming diag."""

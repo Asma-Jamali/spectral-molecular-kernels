@@ -92,7 +92,7 @@ def grid_search_cv_fingerprint(X: np.ndarray, y: np.ndarray,
     return best_params
 
 
-# ── Distance / kernel helpers (global) ───────────────────────────────────────
+# Distance / kernel helpers (global)
 
 def cdist_metric(norm: int) -> str:
     if norm == 1:
@@ -145,7 +145,8 @@ def krr_predict_zero_reg(K_tr: np.ndarray, y_tr: np.ndarray,
     return K_te @ alpha
 
 
-# ── Local kernel helpers (qml2) ───────────────────────────────────────────────
+
+# Local kernel helpers (qml2)
 
 def _prepare_qml2_input(X):
     """Convert object array of per-molecule reps to (flat, natoms) required by qml2.
@@ -265,7 +266,7 @@ def build_local_kernels(X_tr, X_te, length, kernel,
     return K_tr, K_te
 
 
-# ── Grid search ───────────────────────────────────────────────────────────────
+# Grid search
 
 def grid_search_cv_global(X, y, length_grid, lambda_grid, kernel, cv=4, norm=2):
     kf      = KFold(n_splits=cv, shuffle=True, random_state=0)

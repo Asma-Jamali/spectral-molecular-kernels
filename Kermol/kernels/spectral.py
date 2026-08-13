@@ -14,14 +14,7 @@ class SpectralAnalyzer:
         """
         Args:
             K: (N, N) Symmetric Kernel Matrix.
-            center: If True (default), double-center the kernel (as in kernel
-                PCA) before decomposing it. An uncentered, strictly-positive
-                kernel (e.g. Gaussian/Laplacian) has a dominant eigenvalue
-                driven by the mean/offset level rather than genuine
-                covariance structure; centering removes that so SSE/ID/SR/
-                alpha reflect the representation's spectral shape rather
-                than the kernel's offset. Pass False to analyze the raw
-                kernel's spectrum instead.
+            center: If True (default), double-center the kernel before decomposing it.
         """
         self.n_samples = K.shape[0]
         self.center = center
