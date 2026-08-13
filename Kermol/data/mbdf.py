@@ -1,14 +1,9 @@
-"""mbdf.py
-=======
-Vendored subset of the Many-Body Distribution Functionals (MBDF) representation.
+"""
+MBDF: Many-Body Distribution Functionals
+=======================================
 
-Source: https://github.com/dkhan42/MBDF/blob/main/MBDF.py (MIT License,
-Copyright (c) 2023 dkhan42). Only `generate_mbdf` and its dependencies are
-kept — the source file's BoB / density-of-functionals / custom local-kernel
-utilities are dropped since this repo already has its own (qml2-based)
-versions of those.
+Source: https://github.com/dkhan42/MBDF/blob/main/MBDF.py
 
-`generate_mbdf(nuclear_charges, coords, local=True/False, ...)` returns:
   local=True  -> (N, pad, 6) padded per-atom array (same convention as acsf.npy)
   local=False -> (N, D) fixed-size global vector per molecule (D depends on
                   the per-element bag sizes across the dataset)
