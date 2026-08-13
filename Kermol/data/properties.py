@@ -12,28 +12,27 @@ PROP_UNITS = {
     'Cv': 'cal/(mol·K)',
 }
 
-# Maps property_name → column name in filtered_QM9.csv
 CSV_COL_MAP = {
     'U0': 'U0', 'U298': 'U298', 'H298': 'H298', 'G298': 'G298',
     'ZPVE': 'ZPVE', 'gap': 'gap', 'homo': 'HOMO', 'lumo': 'LUMO', 'Cv': 'Cv',
 }
 
-# Atomic reference energies at B3LYP/6-31G(2df,p) in Hartree
-# Source: Ramakrishnan et al., Sci. Data 1, 140022 (2014), Table S1
-ATOMIC_REFS = {
-    'U0':   {1: -0.500273, 6: -37.846772, 7: -54.583861, 8: -75.064579, 9: -99.718730},
-    'U298': {1: -0.498857, 6: -37.845355, 7: -54.582445, 8: -75.063163, 9: -99.717314},
-    'H298': {1: -0.497912, 6: -37.844411, 7: -54.581501, 8: -75.062219, 9: -99.716370},
-    'G298': {1: -0.510927, 6: -37.861317, 7: -54.598897, 8: -75.079532, 9: -99.733544},
+atom_energies = {
+    "H": -0.500273,
+    "C": -37.846772,
+    "N": -54.583861,
+    "O": -75.064579,
+    "F": -99.718730,
 }
+
+ATOMIC_NUM_TO_SYMBOL = {1: 'H', 6: 'C', 7: 'N', 8: 'O', 9: 'F'}
 
 HARTREE_TO_EV = 27.2114
 
 
 def atomization_energies(raw_ha, charges, prop):
     """Subtract per-atom B3LYP references and convert Hartree to eV."""
-    refs    = ATOMIC_REFS[prop]
-    ref_sum = np.array([sum(refs[int(z)] for z in mol_charges if z > 0)
+    ref_sum = np.array([sum(atom_energies[ATOMIC_NUM_TO_SYMBOL[int(z)]] for z in mol_charges if z > 0)
                         for mol_charges in charges])
     return (ref_sum - raw_ha) * HARTREE_TO_EV
 
