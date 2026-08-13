@@ -47,11 +47,14 @@ def save_spectral_results(spectral_rows, eigenvalue_store, tag, spectrum_dir):
     spec_df = pd.DataFrame(spectral_rows)
     spec_df.to_csv(os.path.join(spectrum_dir, f'spectral_metrics_{tag}_raw.csv'), index=False)
 
-    spec_summary = (spec_df.groupby('n_train')[['SSE', 'ID', 'SR', 'alpha', 'alpha_r2', 'tw_eff']]
+    metric_cols = [c for c in ['SSE', 'ID', 'SR', 'alpha', 'alpha_r2',
+                                'SSE_raw', 'ID_raw', 'SR_raw', 'alpha_raw', 'alpha_r2_raw']
+                  if c in spec_df.columns]
+    spec_summary = (spec_df.groupby('n_train')[metric_cols]
                     .agg(['mean', 'std'])
                     .reset_index())
     spec_summary.columns = ['_'.join(c).strip('_') for c in spec_summary.columns]
     spec_summary.to_csv(os.path.join(spectrum_dir, f'spectral_metrics_{tag}.csv'), index=False)
 
     eigval_path = os.path.join(spectrum_dir, f'eigenvalues_{tag}.npz')
-    np.savez(eigval_path, **{f's{s}_n{n}': v for (s, n), v in eigenvalue_store.items()})
+    np.savez(eigval_path, **{f's{s}_n{n}_{v}': arr for (s, n, v), arr in eigenvalue_store.items()})

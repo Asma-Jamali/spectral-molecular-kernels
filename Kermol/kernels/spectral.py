@@ -2,7 +2,7 @@ import numpy as np
 import scipy.linalg
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
-from typing import Tuple, Dict, Optional
+from typing import Tuple, Dict
 
 class SpectralAnalyzer:
     """
@@ -10,13 +10,25 @@ class SpectralAnalyzer:
     Computes eigendecomposition once and calculates various spectral metrics.
     """
 
-    def __init__(self, K: np.ndarray):
+    def __init__(self, K: np.ndarray, center: bool = True):
         """
         Args:
             K: (N, N) Symmetric Kernel Matrix.
+            center: If True (default), double-center the kernel (as in kernel
+                PCA) before decomposing it. An uncentered, strictly-positive
+                kernel (e.g. Gaussian/Laplacian) has a dominant eigenvalue
+                driven by the mean/offset level rather than genuine
+                covariance structure; centering removes that so SSE/ID/SR/
+                alpha reflect the representation's spectral shape rather
+                than the kernel's offset. Pass False to analyze the raw
+                kernel's spectrum instead.
         """
         self.n_samples = K.shape[0]
-        
+        self.center = center
+
+        if center:
+            K = K - K.mean(axis=0, keepdims=True) - K.mean(axis=1, keepdims=True) + K.mean()
+
         # 1. Decompose and Sort (Largest to Smallest)
         eigval, eigvec = scipy.linalg.eigh(K)
         
@@ -88,49 +100,16 @@ class SpectralAnalyzer:
 
         return alpha, r2
 
-    def target_weighted_eff_dim(self, y: np.ndarray, lam: float) -> float:
-        """
-        Computes Target-Weighted Effective Dimension:
-        d_eff,y(λ) = Σ [ μ_j / (μ_j + λ) * ( (u_j^T y)^2 / ||y||^2 ) ]
-        """
-        # Normalize target
-        y_norm_sq = np.dot(y, y)
-        if y_norm_sq == 0:
-            return 0.0
-
-        # Projection of y onto each eigenvector (u_j^T y)
-        # eigenvectors shape: (N, N), y shape: (N,)
-        proj = self.eigenvectors.T @ y 
-
-        # Compute weighted contributions
-        weights = (self.eigenvalues / (self.eigenvalues + lam)) * ((proj**2) / y_norm_sq)
-
-        return np.sum(weights)
-
-    def get_all_metrics(self, y: Optional[np.ndarray] = None, lam: Optional[float] = None) -> Dict[str, float]:
+    def get_all_metrics(self) -> Dict[str, float]:
         """
         Returns a dictionary containing all computed metrics.
-        
-        Args:
-            y: (Optional) Target vector. If provided, target-weighted effective dimension is computed.
-            lam: (Optional) Regularization parameter λ. Required ONLY if y is provided.
         """
         alpha, alpha_r2 = self.compute_power_law_alpha()
-        
-        metrics = {
+
+        return {
             "SSE": self.spectral_shannon_entropy(),
             "ID": self.intrinsic_dimension(),
             "SR": self.stable_rank(),
             "alpha": alpha,
-            "alpha_r2": alpha_r2
+            "alpha_r2": alpha_r2,
         }
-        
-        # Only compute target-weighted effective dimension if y is provided
-        if y is not None:
-            # Enforce that lambda is provided if y is provided
-            if lam is None:
-                raise ValueError("Regularization parameter 'lam' must be provided when calculating target-weighted metrics (y is provided).")
-            
-            metrics["tw_eff"] = self.target_weighted_eff_dim(y, lam)
-            
-        return metrics

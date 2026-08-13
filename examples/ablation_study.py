@@ -93,7 +93,7 @@ def run_rep(rep_name, X_train_full, X_test_full, y_train, y_test, args):
             K_train, K_test = build_global_kernels(X_train, X_test, ls, 'gaussian', norm=2)
             y_pred = krr_predict(K_train, y_train, K_test, best['lambda'])
             test_mae = float(np.mean(np.abs(y_pred - y_test)))
-            metrics = SpectralAnalyzer(K_train).get_all_metrics(y=y_train, lam=best['lambda'])
+            metrics = SpectralAnalyzer(K_train, center=True).get_all_metrics()
 
             print(f"  {rep_name}  N={n:>4d}  ls={ls:<8.0f}  "
                   f"lambda={best['lambda']:.1e}  test_mae={test_mae:.4f}")

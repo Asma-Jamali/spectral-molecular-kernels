@@ -98,9 +98,9 @@ def main():
     test_mae = float(np.mean(np.abs(y_pred - y_test)))
     test_r2 = float(r2_score(y_test, y_pred))
 
-    metrics = SpectralAnalyzer(K_train).get_all_metrics(y=y_train, lam=args.lam)
+    metrics = SpectralAnalyzer(K_train, center=True).get_all_metrics()
     print(f" SSE={metrics['SSE']:.4f}  ID={metrics['ID']:.4f}  SR={metrics['SR']:.4f}  "
-          f"alpha={metrics['alpha']:.4f}  tw_eff={metrics['tw_eff']:.4f}")
+          f"alpha={metrics['alpha']:.4f}")
 
     out_csv = os.path.join(output_dir, f'full_kernel_{args.mode}.csv')
     pd.DataFrame([{

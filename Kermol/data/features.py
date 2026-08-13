@@ -17,12 +17,14 @@ from qml2 import Compound, CompoundList
 from qml2.representations.standard_geometric import array_ as qml_array
 from qml2.representations import generate_fchl19, generate_coulomb_matrix, get_slatm_mbtypes, generate_slatm, compute_ncm, get_bob_bags
 
+from .mbdf import generate_mbdf
+
 import selfies as sf
 
 from tqdm import tqdm
 
 # List of pre-computed global representations stored as .npy files
-PRECOMP_GLOBAL_REPS = {'slatm', 'grover_base', 'grover_large', 'chembert', 'chemberta', 'selfies_ted', 'selformer'}
+PRECOMP_GLOBAL_REPS = {'slatm', 'grover_base', 'grover_large', 'chembert', 'chemberta', 'selfies_ted', 'selformer', 'molformer', 'unimol', 'mbdf_global', 'posegnn', 'smited', 'mat', 'rmat', 'schnet_global', 'chemgpt', 'clamp', 'molbert', 'molgen', 'maceoff'}
 FINGERPRINT_REPS = {'ecfp6', 'ecfp4'}
 
 def generate_ecfp(smiles: np.ndarray, radius: int = 3, n_bits: int = 2048) -> np.ndarray:
@@ -117,6 +119,10 @@ class PhysicalGenerator:
             return self._generate_slatm(coords, charges)
         elif self.representation == 'acsf':
             return self._generate_acsf(coords, charges)
+        elif self.representation == 'mbdf_global':
+            return self._generate_mbdf(coords, charges, local=False)
+        elif self.representation == 'mbdf_local':
+            return self._generate_mbdf(coords, charges, local=True)
         else:
             raise ValueError(f"Unknown physical representation: {self.representation}")
 
@@ -163,7 +169,7 @@ class PhysicalGenerator:
     def _generate_bob(self, coords, charges):
         compounds = [
             Compound(
-                coordinates=np.array(xyz, dtype=np.float64), 
+                coordinates=np.array(xyz, dtype=np.float64),
                 nuclear_charges=np.array(Z, dtype=np.int32)
             )
             for xyz, Z in zip(coords, charges)
@@ -211,6 +217,23 @@ class PhysicalGenerator:
             repacsf.append(self._padding_atomic_matrix(rep,pad))
         repacsf = np.array(repacsf)
         return repacsf
+
+    def _generate_mbdf(self, coords, charges, local: bool):
+        """local=True  -> (N, pad, 6) padded per-atom array (same convention as ACSF)
+           local=False -> (N, D) fixed-size global vector per molecule"""
+        charges_arr = np.empty(len(charges), dtype=object)
+        coords_arr  = np.empty(len(coords), dtype=object)
+        for i, (q, r) in enumerate(zip(charges, coords)):
+            charges_arr[i] = np.asarray(q, dtype=np.float64)
+            coords_arr[i]  = np.asarray(r, dtype=np.float64)
+
+        return generate_mbdf(
+            charges_arr, coords_arr,
+            local=local,
+            n_jobs=self.kwargs.get('n_jobs', -1),
+            pad=self.kwargs.get('pad', None),
+            progress_bar=self.kwargs.get('progress_bar', False),
+        )
 
 
 LLM_MODEL_REGISTRY = {

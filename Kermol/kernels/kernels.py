@@ -4,7 +4,7 @@ from scipy.spatial.distance import cdist
 from sklearn.model_selection import KFold
 from itertools import product
 
-LOCAL_REPS        = {'soap', 'fchl19', 'acsf'}
+LOCAL_REPS        = {'soap', 'fchl19', 'acsf', 'unimol_atomic', 'mbdf_local', 'schnet_local'}
 FINGERPRINT_KERNELS = {
     'tanimoto', 'dice', 'otsuka', 'sogenfrei', 'braunblanquet',
     'faith', 'forbes', 'innerproduct', 'intersection', 'min_max', 'rand',

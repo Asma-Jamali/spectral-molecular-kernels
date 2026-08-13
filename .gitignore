@@ -2,15 +2,31 @@
 check_reps.py
 compare_kernels.py
 compute_spectral.py
+compute_spectral_centered.py
+extract_schnet_features_qm9.py
 generate_acsf.py
+generate_mbdf_qm9.py
+main_spectral_centered.py
+resubmit_missing_spectral_centered.py
 submit_jobs.py
+submit_length4_mae_spectrum.py
+submit_maceoff_qm9.py
+submit_mbdf_qm9.py
 submit_mol.py
+submit_mol_v2.py
+submit_qm9_new_reps.py
+submit_schnet_qm9.py
 submit_spectral.py
+submit_spectral_centered.py
+submit_tdc.py
+submit_tdc_v2.py
 submit_tr_sweep.py
 submit_tr.py
+summarize_length_scales.py
 test_acsf.py
 test_dn_kernel.py
 train_grid.py
+train_schnet_qm9.py
 train.py
 
 # Folders
@@ -24,7 +40,15 @@ Results/
 Results_acsf20000/
 Results_LLM/
 Results_tr/
+Results_v2/
 ResultsProperties/
 slurm_logs/
 Spectrum/
+Spectrum_centered/
+Spectrum_centered_warmup/
+Spectrum_length4_warmup/
+Spectrum_maceoff_warmup/
+Spectrum_v2/
 Tuning/
+Analysis/
+/data/
